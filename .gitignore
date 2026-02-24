@@ -1,0 +1,9 @@
+node_modules/
+frontend/node_modules/
+.env
+.env.*
+!.env.example
+DEEPSEEK_API_KEY=*
+*.log
+.DS_Store
+frontend/dist/

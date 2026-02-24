@@ -1,0 +1,268 @@
+.dashboard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.dashboard-toolbar {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.dashboard-list h3 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.dashboard-list .muted {
+  padding: 1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.paper-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.paper-item {
+  border-bottom: 1px solid var(--border);
+}
+
+.paper-item:last-child {
+  border-bottom: none;
+}
+
+.paper-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem 1rem;
+  background: none;
+  color: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  border: none;
+  cursor: pointer;
+}
+
+.paper-row:hover {
+  background: var(--surface-hover);
+}
+
+.paper-item.selected .paper-row {
+  background: rgba(108, 158, 248, 0.15);
+  color: var(--accent);
+}
+
+.paper-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.paper-status {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.paper-status.status-extracted {
+  background: rgba(107, 201, 138, 0.2);
+  color: var(--success);
+}
+
+.paper-status.status-citation-analysis-only {
+  background: rgba(232, 200, 74, 0.2);
+  color: var(--warning);
+}
+
+.paper-status.status-pending {
+  background: var(--surface-hover);
+  color: var(--text-muted);
+}
+
+.paper-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0 1rem 0.65rem;
+  flex-wrap: wrap;
+}
+
+.paper-actions .btn-small {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.8rem;
+}
+
+.btn-small {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.expand-row {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-content {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-right: 1rem;
+}
+
+.btn-close {
+  background: none;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  line-height: 1;
+  padding: 0 0.5rem;
+  flex-shrink: 0;
+}
+
+.btn-close:hover {
+  color: var(--text);
+}
+
+.modal-body {
+  padding: 1rem;
+  overflow: auto;
+}
+
+.pdf-preview-modal {
+  max-width: 900px;
+}
+
+.pdf-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.page-info {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.pdf-canvas-wrap {
+  overflow: auto;
+  max-height: 75vh;
+  background: #2a2a2a;
+  border-radius: 6px;
+}
+
+.pdf-canvas-wrap canvas {
+  display: block;
+}
+
+.error-text {
+  color: var(--error);
+  margin: 0;
+}
+
+.citation-modal {
+  max-width: 640px;
+}
+
+.citation-section {
+  margin-bottom: 1.25rem;
+}
+
+.citation-section:last-child {
+  margin-bottom: 0;
+}
+
+.citation-section h4 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.citation-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.citation-list li {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+.citation-count {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--accent);
+  min-width: 2.5rem;
+}
+
+.reference-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.reference-list li {
+  margin-bottom: 0.35rem;
+}
+
+.reference-list + .muted {
+  margin-top: 0.5rem;
+}
