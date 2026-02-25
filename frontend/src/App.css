@@ -6,6 +6,10 @@
 
 .app-header {
   margin-bottom: 1.5rem;
+  padding: 1.25rem 1.25rem 1.5rem;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 }
 
 .app-header h1 {
@@ -13,10 +17,21 @@
   font-weight: 700;
   margin: 0 0 0.25rem 0;
   letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.app-header h1::after {
+  content: '';
+  display: block;
+  width: 2.5rem;
+  height: 3px;
+  background: var(--accent);
+  border-radius: 2px;
+  margin-top: 0.5rem;
 }
 
 .tagline {
-  margin: 0;
+  margin: 0.35rem 0 0 0;
   color: var(--text-muted);
   font-size: 0.95rem;
 }
@@ -32,7 +47,7 @@
 }
 
 .banner.error {
-  background: rgba(232, 108, 108, 0.12);
+  background: rgba(221, 28, 26, 0.12);
   border-color: var(--error);
   color: var(--error);
 }
@@ -46,7 +61,7 @@
 }
 
 .banner.loading {
-  background: rgba(108, 158, 248, 0.12);
+  background: rgba(6, 174, 213, 0.15);
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -77,11 +92,12 @@
 
 .btn-primary {
   background: var(--accent);
-  color: #0d0d10;
+  color: #fff;
 }
 
 .btn-primary:hover:not(:disabled) {
   background: var(--accent-dim);
+  color: #fff;
 }
 
 .btn-secondary {
@@ -98,6 +114,8 @@
   background: var(--surface);
   border-radius: var(--radius);
   border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  box-shadow: 0 1px 3px rgba(8, 103, 136, 0.08);
   overflow: hidden;
 }
 

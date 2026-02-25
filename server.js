@@ -130,7 +130,13 @@ app.post('/api/citation-analysis', async (req, res) => {
 Then identify which of these references are cited most often in the body of the paper (in-text citations). 
 Return a JSON object with two keys:
 1) "references": array of strings, each string is one full reference as it appears in the reference list.
-2) "citationCounts": array of objects with "reference" (string, the reference text) and "count" (number, how many times it was cited in the text). Sort by count descending. Include only references that appear at least once.
+2) "citationCounts": array of objects with "reference" (string) and "count" (number). Sort by count descending. Include only references that appear at least once.
+
+CRITICAL — Valid JSON only:
+- Output must be valid, parseable JSON. No unterminated strings, no unescaped quotes or newlines inside strings.
+- If a reference is very long or would break JSON (e.g. contains unescaped quotes), truncate it to at most 300 characters or skip it. Prefer valid JSON over complete content.
+- Escape any double quotes inside strings with backslash (e.g. \\").
+- If you are running out of space, close all brackets and strings properly and omit the rest rather than leaving JSON incomplete.
 
 Paper text:
 ---
@@ -149,7 +155,15 @@ Respond with only the JSON object, no markdown.`;
 
     const content = completion.choices[0]?.message?.content?.trim() || '';
     const jsonStr = content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '');
-    const out = JSON.parse(jsonStr);
+    let out;
+    try {
+      out = JSON.parse(jsonStr);
+    } catch (parseErr) {
+      console.error('Citation analysis JSON parse error:', parseErr.message);
+      return res.status(502).json({
+        error: 'Citation analysis returned invalid JSON. Try again or use a shorter paper.',
+      });
+    }
     return res.json({
       references: out.references || [],
       topCited: (out.citationCounts || []).slice(0, 30),

@@ -1,3 +1,6 @@
+/** Maximum number of articles in the list (for extract / reference list). */
+export const MAX_PAPERS = 10;
+
 /**
  * Extraction field keys; must match backend EXTRACTION_FIELDS.
  */

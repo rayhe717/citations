@@ -1,15 +1,21 @@
+/* Coolors palette: #06aed5 #086788 #f0c808 #fff1d0 #dd1c1a */
 :root {
-  --bg: #0f0f12;
-  --surface: #18181d;
-  --surface-hover: #222228;
-  --border: #2a2a32;
-  --text: #e8e8ec;
-  --text-muted: #9090a0;
-  --accent: #6c9ef8;
-  --accent-dim: #4a7ad4;
-  --success: #6bc98a;
-  --warning: #e8c84a;
-  --error: #e86c6c;
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-hover: #f5f5f5;
+  --border: #e0e0e0;
+  --text: #0a3d4d;
+  --text-muted: #086788;
+  --accent: #06aed5;
+  --accent-dim: #058ab5;
+  --lighter-blue: #0583e8;
+  --success: #086788;
+  --warning: #f0c808;
+  --error: #dd1c1a;
+  --teal: #086788;
+  --gold: #f0c808;
+  --cream: #fff1d0;
+  --bg-gradient: linear-gradient(180deg, #e8f4fc 0%, var(--cream) 100%);
   --radius: 10px;
   --font-sans: 'DM Sans', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
@@ -22,7 +28,8 @@
 body {
   margin: 0;
   font-family: var(--font-sans);
-  background: var(--bg);
+  background: var(--bg-gradient);
+  min-height: 100vh;
   color: var(--text);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
