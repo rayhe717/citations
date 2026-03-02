@@ -60,7 +60,7 @@ export async function createCollection(name) {
 }
 
 /**
- * Paper record: { id, fileName, fileSize, processedAt, pdfText?, extractedData?, citationAnalysis?, starred?, tags? }
+ * Paper record: { id, fileName, fileSize, processedAt, pdfText?, extractedData?, starred?, tags? }
  * tags: string[] — user-defined tags for filtering
  */
 export function paperId(fileName, fileSize) {

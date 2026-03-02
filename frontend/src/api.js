@@ -13,11 +13,24 @@ export async function extractFromText(text) {
   return json.data;
 }
 
-export async function citationAnalysis(text) {
-  const res = await fetch('/api/citation-analysis', {
+export async function testNotionConnection(databaseId) {
+  const url = databaseId ? `/api/notion-test?databaseId=${encodeURIComponent(databaseId)}` : '/api/notion-test';
+  const res = await fetch(url);
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+  return json;
+}
+
+export async function saveToNotion(papers, databaseId) {
+  const payload = papers.map((p) => ({
+    fileName: p.fileName,
+    extractedData: p.extractedData,
+  }));
+  const body = databaseId ? { papers: payload, databaseId } : { papers: payload };
+  const res = await fetch('/api/notion-sync', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify(body),
   });
   const json = await res.json();
   if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);

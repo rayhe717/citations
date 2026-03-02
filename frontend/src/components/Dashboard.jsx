@@ -4,7 +4,6 @@ import './Dashboard.css';
 
 const statusLabel = (paper) => {
   if (paper.extractedData) return 'Extracted';
-  if (paper.citationAnalysis && !paper.extractedData) return 'Citation analysis only';
   return 'Pending';
 };
 
@@ -17,6 +16,8 @@ export default function Dashboard({
   onSwitchCollection,
   onNewCollection,
   onRenameCollection,
+  onUpdateNotionDatabaseId,
+  currentCollection,
   selectedId,
   selectedIds,
   starredOnly,
@@ -27,11 +28,11 @@ export default function Dashboard({
   onToggleStarred,
   onToggleFilterTag,
   onExtractSelected,
-  onExportCsv,
+  onSaveToNotion,
+  onTestNotion,
   onExportApa,
-  onRunCitations,
   extractDisabled,
-  citationsDisabled,
+  saveToNotionDisabled,
   onSelect,
   onAddFiles,
   onRemovePaper,
@@ -41,8 +42,11 @@ export default function Dashboard({
 }) {
   const fileInputRef = useRef(null);
   const renameInputRef = useRef(null);
+  const notionDbInputRef = useRef(null);
   const [showRenameInput, setShowRenameInput] = useState(false);
   const [renameInputValue, setRenameInputValue] = useState('');
+  const [showNotionDbInput, setShowNotionDbInput] = useState(false);
+  const [notionDbInputValue, setNotionDbInputValue] = useState('');
 
   useEffect(() => {
     if (showRenameInput && renameInputRef.current) {
@@ -50,6 +54,12 @@ export default function Dashboard({
       renameInputRef.current.select();
     }
   }, [showRenameInput]);
+
+  useEffect(() => {
+    if (showNotionDbInput && notionDbInputRef.current) {
+      notionDbInputRef.current.focus();
+    }
+  }, [showNotionDbInput]);
 
   const startRename = () => {
     setRenameInputValue(currentCollectionName || '');
@@ -66,6 +76,22 @@ export default function Dashboard({
 
   const cancelRename = () => {
     setShowRenameInput(false);
+  };
+
+  const startNotionDb = () => {
+    setNotionDbInputValue(currentCollection?.notionDatabaseId || '');
+    setShowNotionDbInput(true);
+  };
+
+  const saveNotionDb = () => {
+    if (currentCollectionId) {
+      onUpdateNotionDatabaseId(currentCollectionId, notionDbInputValue);
+    }
+    setShowNotionDbInput(false);
+  };
+
+  const cancelNotionDb = () => {
+    setShowNotionDbInput(false);
   };
 
   const handleCollectionSelect = (e) => {
@@ -162,6 +188,42 @@ export default function Dashboard({
             )}
           </div>
         )}
+        {currentCollection && (
+          <div className="toolbar-notion-db">
+            {showNotionDbInput ? (
+              <div className="toolbar-notion-db-inline">
+                <input
+                  ref={notionDbInputRef}
+                  type="text"
+                  className="toolbar-notion-db-input"
+                  value={notionDbInputValue}
+                  onChange={(e) => setNotionDbInputValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') saveNotionDb();
+                    if (e.key === 'Escape') cancelNotionDb();
+                  }}
+                  placeholder="Notion database ID (or leave empty for .env default)"
+                  aria-label="Notion database ID for this folder"
+                />
+                <button type="button" className="btn btn-small" onClick={saveNotionDb}>
+                  Save
+                </button>
+                <button type="button" className="btn btn-small btn-secondary" onClick={cancelNotionDb}>
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="btn btn-secondary btn-small"
+                onClick={startNotionDb}
+                title="Set which Notion database this folder saves to (leave empty to use .env default)"
+              >
+                Notion DB: {currentCollection.notionDatabaseId ? '✓' : 'Configure'}
+              </button>
+            )}
+          </div>
+        )}
         <button
           type="button"
           className="btn btn-primary"
@@ -215,10 +277,20 @@ export default function Dashboard({
           <button
             type="button"
             className="btn btn-secondary"
-            onClick={onExportCsv}
-            title="Export selected to CSV (max 10)"
+            onClick={onTestNotion}
+            disabled={loading}
+            title="Test Notion connection (API key + database)"
           >
-            Download CSV
+            Test Notion
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={onSaveToNotion}
+            disabled={saveToNotionDisabled}
+            title="Save selected extracted data to your Notion database (max 10)"
+          >
+            Save to Notion
           </button>
           <button
             type="button"
@@ -227,15 +299,6 @@ export default function Dashboard({
             title="APA list from all selected articles"
           >
             APA 7th Reference List
-          </button>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={onRunCitations}
-            disabled={citationsDisabled}
-            title={citationsDisabled ? 'Select an article first' : 'Citation analysis for selected article'}
-          >
-            Citations
           </button>
         </div>
         {allTags.length > 0 && (

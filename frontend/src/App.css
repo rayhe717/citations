@@ -52,7 +52,14 @@
   color: var(--error);
 }
 
-.banner.error button {
+.banner.success {
+  background: rgba(8, 103, 136, 0.12);
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.banner.error button,
+.banner.success button {
   background: none;
   color: inherit;
   font-size: 1.25rem;

@@ -3,15 +3,13 @@ import { getDB, getAllPapers, savePaper, deletePaper, paperId, getCollections, g
 
 const CURRENT_COLLECTION_KEY = 'cursor-citations-current-collection';
 import { extractPdfText } from './pdfUtils';
-import { extractFromText, citationAnalysis } from './api';
-import { buildCsv, downloadCsv } from './csvExport';
+import { extractFromText, saveToNotion, testNotionConnection } from './api';
 import { buildApaList, downloadApaList } from './apaCitation';
 import { EXTRACTION_FIELDS, MAX_PAPERS } from './constants';
 import Dashboard from './components/Dashboard';
 import PreviewTable from './components/PreviewTable';
 import TagsEditor from './components/TagsEditor';
 import PdfPreview from './components/PdfPreview';
-import CitationAnalysisView from './components/CitationAnalysisView';
 import './App.css';
 
 export default function App() {
@@ -23,7 +21,6 @@ export default function App() {
   const [starredOnly, setStarredOnly] = useState(false);
   const [filterTags, setFilterTags] = useState([]);
   const [previewFile, setPreviewFile] = useState(null);
-  const [citationAnalysisPaper, setCitationAnalysisPaper] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -108,7 +105,6 @@ export default function App() {
         processedAt: null,
         pdfText: null,
         extractedData: null,
-        citationAnalysis: null,
         starred: false,
         tags: [],
         _file: file,
@@ -177,41 +173,30 @@ export default function App() {
     }
   }, [selectedIds, papers, runExtractionForPaper]);
 
-  const runCitationAnalysis = useCallback(async (paper) => {
+  const currentCollection = collections.find((c) => c.id === currentCollectionId);
+
+  const handleTestNotion = useCallback(async () => {
     setError(null);
     setLoading(true);
+    const dbId = currentCollection?.notionDatabaseId?.trim() || undefined;
     try {
-      let text = paper.pdfText;
-      if (!text && paper._file) {
-        text = await extractPdfText(paper._file);
-      }
-      if (!text?.trim()) {
-        throw new Error('No text available. Run extraction first.');
-      }
-      const result = await citationAnalysis(text);
-      const updated = {
-        ...paper,
-        pdfText: paper.pdfText || text,
-        citationAnalysis: result,
-      };
-      await savePaper(updated);
-      setPapers((prev) => prev.map((p) => (p.id === paper.id ? { ...updated, _file: p._file } : p)));
-      setCitationAnalysisPaper(updated);
+      const result = await testNotionConnection(dbId);
+      setError(result.ok ? `Notion connected: ${result.databaseTitle || 'database'}` : (result.error || 'Connection failed'));
     } catch (e) {
-      setError(e.message || 'Citation analysis failed');
+      setError(e.message || 'Notion connection test failed.');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentCollection?.notionDatabaseId]);
 
-  const handleExportCsv = useCallback(() => {
+  const handleSaveToNotion = useCallback(async () => {
     const selected = papers.filter((p) => selectedIds.includes(p.id));
     if (selected.length === 0) {
-      setError('Select at least one article for CSV export (use checkboxes).');
+      setError('Select at least one article to save to Notion (use checkboxes).');
       return;
     }
     if (selected.length > MAX_PAPERS) {
-      setError(`Select up to ${MAX_PAPERS} articles for CSV export.`);
+      setError(`Select up to ${MAX_PAPERS} articles to save to Notion.`);
       return;
     }
     const withData = selected.filter((p) => p.extractedData);
@@ -219,9 +204,26 @@ export default function App() {
       setError('No extracted data for selected articles. Run "Extract selected" first.');
       return;
     }
-    const csv = buildCsv(withData);
-    downloadCsv(csv);
-  }, [papers, selectedIds]);
+    setError(null);
+    setLoading(true);
+    const dbId = currentCollection?.notionDatabaseId?.trim() || undefined;
+    try {
+      const result = await saveToNotion(withData, dbId);
+      const { created, updated, errors } = result;
+      const msg = [];
+      if (created) msg.push(`${created} created`);
+      if (updated) msg.push(`${updated} updated`);
+      if (errors?.length) {
+        const first = errors[0];
+        msg.push(`${errors.length} failed: ${first.fileName} — ${first.error}`);
+      }
+      setError(msg.length ? `Notion: ${msg.join('. ')}` : null);
+    } catch (e) {
+      setError(e.message || 'Save to Notion failed.');
+    } finally {
+      setLoading(false);
+    }
+  }, [papers, selectedIds, currentCollection?.notionDatabaseId]);
 
   const handleExportApa = useCallback(() => {
     const selected = papers.filter((p) => selectedIds.includes(p.id));
@@ -251,6 +253,14 @@ export default function App() {
     }
   }, [selectedId, currentCollectionId, collections]);
 
+  const handleUpdateNotionDatabaseId = useCallback(async (collectionId, notionDatabaseId) => {
+    const coll = collections.find((c) => c.id === collectionId);
+    if (!coll) return;
+    const updated = { ...coll, notionDatabaseId: notionDatabaseId?.trim() || undefined };
+    await saveCollection(updated);
+    setCollections((prev) => prev.map((c) => (c.id === collectionId ? updated : c)));
+  }, [collections]);
+
   const toggleStarred = useCallback(async (paper) => {
     const updated = { ...paper, starred: !paper.starred };
     await savePaper(updated);
@@ -265,7 +275,6 @@ export default function App() {
     setPapers((prev) => prev.map((p) => (p.id === id ? { ...updated, _file: p._file } : p)));
   }, [papers]);
 
-  const currentCollection = collections.find((c) => c.id === currentCollectionId);
   const papersInView = React.useMemo(
     () =>
       currentCollection?.paperIds?.length
@@ -318,19 +327,12 @@ export default function App() {
   }
   const selectedPaper = papers.find((p) => p.id === selectedId);
   const starredCount = papersInView.filter((p) => p.starred).length;
-  const citationsPaper =
-    selectedPaper && (selectedPaper.pdfText || selectedPaper._file)
-      ? selectedPaper
-      : papers.find((p) => selectedIds.includes(p.id) && (p.pdfText || p._file));
-  const citationsDisabled = loading || !citationsPaper;
 
   const collectionExtractedCounts = React.useMemo(() => {
     const out = {};
     collections.forEach((c) => {
-      out[c.id] = (c.paperIds || []).filter((id) => {
-        const p = papers.find((x) => x.id === id);
-        return p && p.extractedData;
-      }).length;
+      const ids = new Set(c.paperIds || []);
+      out[c.id] = papers.filter((p) => ids.has(p.id) && p.extractedData).length;
     });
     return out;
   }, [collections, papers]);
@@ -343,7 +345,7 @@ export default function App() {
       </header>
 
       {error && (
-        <div className="banner error" role="alert">
+        <div className={`banner ${error.startsWith('Notion connected:') ? 'success' : 'error'}`} role="alert">
           {error}
           <button type="button" onClick={() => setError(null)} aria-label="Dismiss">×</button>
         </div>
@@ -365,6 +367,8 @@ export default function App() {
           onSwitchCollection={handleSwitchCollection}
           onNewCollection={handleNewCollection}
           onRenameCollection={handleRenameCollection}
+          onUpdateNotionDatabaseId={handleUpdateNotionDatabaseId}
+          currentCollection={currentCollection}
           selectedId={selectedId}
           selectedIds={selectedIds}
           starredOnly={starredOnly}
@@ -375,11 +379,11 @@ export default function App() {
           onToggleStarred={toggleStarred}
           onToggleFilterTag={toggleFilterTag}
           onExtractSelected={handleExtractSelected}
-          onExportCsv={handleExportCsv}
+          onSaveToNotion={handleSaveToNotion}
+          onTestNotion={handleTestNotion}
           onExportApa={handleExportApa}
-          onRunCitations={() => citationsPaper && runCitationAnalysis(citationsPaper)}
           extractDisabled={loading || selectedIds.length === 0 || selectedIds.length > MAX_PAPERS}
-          citationsDisabled={citationsDisabled}
+          saveToNotionDisabled={loading || selectedIds.length === 0 || selectedIds.length > MAX_PAPERS}
           onSelect={setSelectedId}
           onAddFiles={addFiles}
           onRemovePaper={removePaper}
@@ -399,12 +403,6 @@ export default function App() {
           </section>
         )}
 
-        {citationAnalysisPaper?.citationAnalysis && (
-          <CitationAnalysisView
-            paper={citationAnalysisPaper}
-            onClose={() => setCitationAnalysisPaper(null)}
-          />
-        )}
       </main>
 
       {previewFile && (
